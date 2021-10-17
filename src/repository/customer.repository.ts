@@ -1,42 +1,50 @@
 import { Injectable } from '@nestjs/common';
-import { Model } from 'objection';
+import { Customer } from 'src/models/customer';
+import { Page } from 'src/utils/paging/page';
+import { PageRequest } from 'src/utils/paging/page-request';
 
 @Injectable()
 export class CustomerRepository {
-  async update(id: number, request: any): Promise<any>{
+  
+  async update(id: number, request: any): Promise<Customer>{
     await Customer.query().findById(id).patch(
       request
     ).throwIfNotFound();
     return Customer.query().findById(id);
   }
   
-  deleteById(id: number) {
-    return Customer.query().deleteById(id).throwIfNotFound();
+  async deleteById(id: number) {
+    return await Customer.query().deleteById(id).throwIfNotFound();
   }
   
-  findByName(name: string): any{
-    return Customer.query().where("name", name).first().throwIfNotFound();
+  async findByName(name: string): Promise<Customer>{
+    return await Customer.query().where("name", name).first().throwIfNotFound();
   }
   
-  findById(id: number): any {
-    return Customer.query().findById(id).throwIfNotFound();
+  async findById(id: number): Promise<Customer> {
+    return await Customer.query().findById(id).throwIfNotFound();
   }
   
-  findAll(): any {
-    return Customer.query();
+  async findAll(): Promise<Customer[]> {
+    return await Customer.query();
   }
 
-  save(customerRequest): any {
-    return Customer.query().insert(
+  async findAllPaginated(pageRequest: PageRequest) {
+      const data = await Customer
+        .query()
+        .orderBy(pageRequest.sort.orderBy, pageRequest.sort.direction)
+        .page(pageRequest.page, pageRequest.size);
+
+      return new Page<Customer>(data.results, data.total, pageRequest);
+  }
+
+  async save(customerRequest): Promise<Customer> {
+    return await Customer.query().insert(
       customerRequest
     );
   }
 
 }
 
-class Customer extends Model {
-  static get tableName() {
-    return 'CUSTOMERS';
-  }
-}
+
   
